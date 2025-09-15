@@ -22,7 +22,7 @@ app.use(express.json());
 app.use(
   cors({
     origin: [
-      "http://localhost:3001",
+      "https://exam-guardian-three.vercel.app/",
       "http://localhost:5173",
     ],
     credentials: true,

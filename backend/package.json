@@ -1,7 +1,7 @@
 {
-  "name": "0_authentication_jwt",
+  "name": "ExamGuardian-Backend",
   "version": "1.0.0",
-  "description": "JWT Authentication, Redux Toolkit, bcrypt setup",
+  "description": "Backend for ExamGuardian Application",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
