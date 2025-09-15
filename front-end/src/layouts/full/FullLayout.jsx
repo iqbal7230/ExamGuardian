@@ -1,38 +1,72 @@
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
+import React, { useState } from 'react';
+import { styled, Container, Box } from '@mui/material';
+import { Outlet } from 'react-router-dom';
 
-import Header from "../full/header/Header.jsx";
-import Sidebar from "../full/sidebar/Sidebar.jsx";
+import Header from './header/Header';
+import Sidebar from './sidebar/Sidebar';
+
+const MainWrapper = styled('div')(() => ({
+  display: 'flex',
+  minHeight: '100vh',
+  width: '100%',
+}));
+
+const PageWrapper = styled('div')(() => ({
+  display: 'flex',
+  flexGrow: 1,
+  paddingBottom: '60px',
+  flexDirection: 'column',
+  zIndex: 1,
+  backgroundColor: 'transparent',
+}));
 
 const FullLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isMobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  // const lgUp = useMediaQuery((theme) => theme.breakpoints.up("lg"));
 
   return (
-    <div className="flex min-h-screen w-full">
+    <MainWrapper className="mainwrapper">
+      {/* ------------------------------------------- */}
       {/* Sidebar */}
+      {/* ------------------------------------------- */}
       <Sidebar
         isSidebarOpen={isSidebarOpen}
         isMobileSidebarOpen={isMobileSidebarOpen}
         onSidebarClose={() => setMobileSidebarOpen(false)}
       />
-
-      {/* PageWrapper */}
-      <div className="flex flex-col flex-1 pb-16 z-10 bg-transparent">
+      {/* ------------------------------------------- */}
+      {/* Main Wrapper */}
+      {/* ------------------------------------------- */}
+      <PageWrapper className="page-wrapper">
+        {/* ------------------------------------------- */}
         {/* Header */}
+        {/* ------------------------------------------- */}
         <Header
           toggleSidebar={() => setSidebarOpen(!isSidebarOpen)}
           toggleMobileSidebar={() => setMobileSidebarOpen(true)}
         />
-
+        {/* ------------------------------------------- */}
         {/* PageContent */}
-        <div className="px-4 sm:px-6 lg:px-8 max-w-[1200px] w-full mx-auto pt-5">
-          <div className="min-h-[calc(100vh-170px)]">
+        {/* ------------------------------------------- */}
+        <Container
+          sx={{
+            paddingTop: '20px',
+            maxWidth: '1200px',
+          }}
+        >
+          {/* ------------------------------------------- */}
+          {/* Page Route */}
+          {/* ------------------------------------------- */}
+          <Box sx={{ minHeight: 'calc(100vh - 170px)' }}>
             <Outlet />
-          </div>
-        </div>
-      </div>
-    </div>
+          </Box>
+          {/* ------------------------------------------- */}
+          {/* End Page */}
+          {/* ------------------------------------------- */}
+        </Container>
+      </PageWrapper>
+    </MainWrapper>
   );
 };
 

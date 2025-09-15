@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Editor } from '@monaco-editor/react';
-import axiosInstance from '../../axios';
-import Webcam from '../student/Components/WebCam';
+import React, { useState, useEffect } from "react";
+import { Editor } from "@monaco-editor/react";
+import axiosInstance from "../../axios";
+import Webcam from "../student/Components/WebCam";
 import {
   Button,
   Box,
@@ -12,20 +12,21 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-} from '@mui/material';
-import { useSaveCheatingLogMutation } from '../../slices/cheatingLogApiSlice'; // Adjust the import path
-import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
-import { useNavigate, useParams } from 'react-router';
-import { useCheatingLog } from '../../context/CheatingLogContext.jsx';
+} from "@mui/material";
+import { useSaveCheatingLogMutation } from "../../slices/cheatingLogApiSlice";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { useNavigate, useParams } from "react-router";
+import { useCheatingLog } from "../../context/CheatingLogContext";
 
 export default function Coder() {
-  const [code, setCode] = useState('// Write your code here...');
-  const [language, setLanguage] = useState('javascript');
-  const [output, setOutput] = useState('');
+  const [code, setCode] = useState("// Write your code here...");
+  const [language, setLanguage] = useState("javascript");
+  const [output, setOutput] = useState("");
   const [questionId, setQuestionId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [question, setQuestion] = useState(null);
+
   const { examId } = useParams();
   const navigate = useNavigate();
   const { userInfo } = useSelector((state) => state.auth);
@@ -34,56 +35,58 @@ export default function Coder() {
 
   useEffect(() => {
     if (userInfo) {
-      updateCheatingLog((prevLog) => ({
-        ...prevLog,
+      updateCheatingLog((prev) => ({
+        ...prev,
         username: userInfo.name,
         email: userInfo.email,
       }));
     }
   }, [userInfo]);
 
-  // Fetch coding question when component mounts
   useEffect(() => {
     const fetchCodingQuestion = async () => {
       try {
         setIsLoading(true);
-        const response = await axiosInstance.get(`/api/coding/questions/exam/${examId}`, {
-          withCredentials: true,
-        });
+        const response = await axiosInstance.get(
+          `/api/coding/questions/exam/${examId}`,
+          { withCredentials: true }
+        );
+
         if (response.data.success && response.data.data) {
           setQuestionId(response.data.data._id);
           setQuestion(response.data.data);
-          // Set initial code if there's a template or description
+
           if (response.data.data.description) {
-            setCode(`// ${response.data.data.description}\n\n// Write your code here...`);
+            setCode(
+              `// ${response.data.data.description}\n\n// Write your code here...`
+            );
           }
         } else {
-          toast.error('No coding question found for this exam. Please contact your teacher.');
+          toast.error(
+            "No coding question found for this exam. Please contact your teacher."
+          );
         }
       } catch (error) {
-        console.error('Error fetching coding question:', error);
-        toast.error(error?.response?.data?.message || 'Failed to load coding question');
+        toast.error(error?.response?.data?.message || "Failed to load coding question");
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (examId) {
-      fetchCodingQuestion();
-    }
+    if (examId) fetchCodingQuestion();
   }, [examId]);
 
   const runCode = async () => {
     let apiUrl;
     switch (language) {
-      case 'python':
-        apiUrl = '/run-python';
+      case "python":
+        apiUrl = "/run-python";
         break;
-      case 'java':
-        apiUrl = '/run-java';
+      case "java":
+        apiUrl = "/run-java";
         break;
-      case 'javascript':
-        apiUrl = '/run-javascript';
+      case "javascript":
+        apiUrl = "/run-javascript";
         break;
       default:
         return;
@@ -91,43 +94,28 @@ export default function Coder() {
 
     try {
       const response = await axiosInstance.post(apiUrl, { code }, { withCredentials: true });
-      console.log('API Response:', response.data); // Log the response for debugging
-      setOutput(response.data); // Adjust based on actual response structure
-    } catch (error) {
-      console.error('Error running code:', error);
-      setOutput('Error running code.'); // Display error message
+      setOutput(response.data);
+    } catch {
+      setOutput("Error running code.");
     }
   };
 
   const handleSubmit = async () => {
-    console.log('Starting submission with questionId:', questionId);
-    console.log('Current code:', code);
-    console.log('Selected language:', language);
-    console.log('Current cheating log:', cheatingLog);
-
     if (!questionId) {
-      toast.error('Question not loaded properly. Please try again.');
+      toast.error("Question not loaded properly. Please try again.");
       return;
     }
 
     try {
-      // First submit the code
-      const codeSubmissionData = {
-        code,
-        language,
-        questionId,
-      };
-
-      console.log('Submitting code with data:', codeSubmissionData);
-
-      const response = await axiosInstance.post('/api/coding/submit', codeSubmissionData, {
-        withCredentials: true,
-      });
-      console.log('Submission response:', response.data);
+      const codeSubmissionData = { code, language, questionId };
+      const response = await axiosInstance.post(
+        "/api/coding/submit",
+        codeSubmissionData,
+        { withCredentials: true }
+      );
 
       if (response.data.success) {
         try {
-          // Make sure we have the latest user info in the log
           const updatedLog = {
             ...cheatingLog,
             username: userInfo.name,
@@ -137,48 +125,38 @@ export default function Coder() {
             multipleFaceCount: parseInt(cheatingLog.multipleFaceCount) || 0,
             cellPhoneCount: parseInt(cheatingLog.cellPhoneCount) || 0,
             prohibitedObjectCount: parseInt(cheatingLog.prohibitedObjectCount) || 0,
-            screenshots: cheatingLog.screenshots || [], // Ensure screenshots array exists
+            screenshots: cheatingLog.screenshots || [],
           };
 
-          console.log('Saving cheating log with screenshots:', updatedLog);
-
-          // Save the cheating log
-          const logResult = await saveCheatingLogMutation(updatedLog).unwrap();
-          console.log('Cheating log saved successfully:', logResult);
-
-          toast.success('Test submitted successfully!');
-          navigate('/success');
-        } catch (cheatingLogError) {
-          console.error('Error saving cheating log:', cheatingLogError);
-          toast.error('Test submitted but failed to save monitoring logs');
-          navigate('/success');
+          await saveCheatingLogMutation(updatedLog).unwrap();
+          toast.success("Test submitted successfully!");
+          navigate("/success");
+        } catch {
+          toast.error("Test submitted but failed to save monitoring logs");
+          navigate("/success");
         }
       } else {
-        console.error('Submission failed:', response.data);
-        toast.error('Failed to submit code');
+        toast.error("Failed to submit code");
       }
     } catch (error) {
-      console.error('Error during submission:', error.response?.data || error);
-      toast.error(
-        error?.response?.data?.message || error?.data?.message || 'Failed to submit test',
-      );
+      toast.error(error?.response?.data?.message || "Failed to submit test");
     }
   };
 
   return (
-    <Box sx={{ p: 3, height: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box className="p-4 md:p-6 h-screen flex flex-col bg-gray-50">
       {isLoading ? (
-        <Box sx={{ textAlign: 'center', p: 3 }}>Loading question...</Box>
+        <Box className="text-center p-6">Loading question...</Box>
       ) : !question ? (
-        <Box sx={{ textAlign: 'center', p: 3 }}>
-          No coding question found for this exam. Please contact your teacher.
+        <Box className="text-center p-6">
+          No coding question found. Please contact your teacher.
         </Box>
       ) : (
-        <Grid container spacing={2} sx={{ flex: 1, minHeight: 0 }}>
-          {/* Question Section */}
+        <Grid container spacing={3} className="flex-1 overflow-hidden">
+          {/* Question header */}
           <Grid item xs={12}>
-            <Paper sx={{ p: 2, mb: 2 }}>
-              <Typography variant="h5" gutterBottom>
+            <Paper className="p-4 shadow-md rounded-xl bg-white">
+              <Typography variant="h6" className="font-bold mb-2">
                 {question.question}
               </Typography>
               <Typography variant="body1" color="text.secondary">
@@ -187,12 +165,13 @@ export default function Coder() {
             </Paper>
           </Grid>
 
-          {/* Main Content Area */}
-          <Grid item xs={12} sx={{ display: 'flex', gap: 2, height: 'calc(100vh - 200px)' }}>
-            {/* Code Editor Section */}
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <Box sx={{ mb: 2 }}>
-                <FormControl sx={{ minWidth: 200 }}>
+          {/* Main Area */}
+          <Grid item xs={12} className="flex flex-1 gap-2 overflow-hidden">
+            {/* Code editor + output */}
+            <Box className="flex flex-col flex-1">
+              {/* Language select */}
+              <Box className="mb-3 mt-1 ">
+                <FormControl sx={{ minWidth: 100 }}>
                   <InputLabel>Language</InputLabel>
                   <Select
                     value={language}
@@ -206,7 +185,8 @@ export default function Coder() {
                 </FormControl>
               </Box>
 
-              <Box sx={{ flex: 1, minHeight: 0, height: 'calc(100% - 200px)' }}>
+              {/* Editor */}
+              <Box className="flex-1 border rounded-lg overflow-hidden">
                 <Editor
                   height="100%"
                   language={language}
@@ -222,35 +202,35 @@ export default function Coder() {
                 />
               </Box>
 
-              {/* Output Section */}
-              <Paper sx={{ mt: 2, p: 2, height: '120px', overflow: 'auto' }}>
-                <Typography variant="h6" gutterBottom>
+              {/* Output */}
+              <Paper className="mt-4 p-3 rounded-lg bg-gray-100 shadow-inner h-32 overflow-auto">
+                <Typography variant="subtitle1" className="font-semibold mb-1">
                   Output:
                 </Typography>
-                <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{output}</pre>
+                <pre className="text-sm whitespace-pre-wrap">{output}</pre>
               </Paper>
 
-              {/* Action Buttons */}
-              <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
-                <Button variant="contained" onClick={runCode} sx={{ minWidth: 120 }}>
+              {/* Actions */}
+              <Box className="mt-4 flex gap-3">
+                <Button variant="contained" onClick={runCode} className="min-w-[120px]">
                   Run Code
                 </Button>
                 <Button
                   variant="contained"
                   color="primary"
                   onClick={handleSubmit}
-                  sx={{ minWidth: 120 }}
+                  className="min-w-[120px]"
                 >
                   Submit Test
                 </Button>
               </Box>
             </Box>
 
-            {/* Webcam Section */}
-            <Box sx={{ width: '320px', height: '240px', flexShrink: 0 }}>
-              <Paper sx={{ height: '100%', overflow: 'hidden' }}>
+            {/* Webcam */}
+            <Box className="w-[150px] hidden md:block flex-shrink-0">
+              <Paper className="h-full rounded-xl shadow-md overflow-hidden">
                 <Webcam
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   cheatingLog={cheatingLog}
                   updateCheatingLog={updateCheatingLog}
                 />

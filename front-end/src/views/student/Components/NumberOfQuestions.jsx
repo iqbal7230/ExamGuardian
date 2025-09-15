@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Grid from '@mui/material/Grid';
 import Avatar from '@mui/material/Avatar';
-
 import { Box, Button, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -22,6 +21,8 @@ const NumberOfQuestions = ({ questionLength, submitTest, examDurationInSeconds }
   const handleQuestionButtonClick = (questionNumber) => {
     // Set the current question to the selected question number
     // setCurrentQuestion(questionNumber);
+    // navigate(`/student/exam/question/${questionNumber - 1}`);
+
   };
 
   useEffect(() => {
@@ -59,10 +60,10 @@ const NumberOfQuestions = ({ questionLength, submitTest, examDurationInSeconds }
   return (
     <>
       <Box position="sticky" top="0" zIndex={1} bgcolor="white" paddingY="10px" width="100%" px={3}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Stack direction="row" alignItems="center" justifyContent="space-between" gap={4}>
           <Typography variant="h6">Questions: 1/{totalQuestions}</Typography>
           <Typography variant="h6">Time Left: {formatTime(timeLeft)}</Typography>
-          <Button variant="contained" onClick={submitTest} color="error">
+          <Button variant="contained" onClick={submitTest} color="error" className=''>
             Finish Test
           </Button>
         </Stack>

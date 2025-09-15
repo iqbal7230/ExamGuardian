@@ -1,112 +1,164 @@
-import React, { useRef, useState, useEffect } from "react";
-import * as tf from "@tensorflow/tfjs";
-import * as cocossd from "@tensorflow-models/coco-ssd";
-import Webcam from "react-webcam";
-import { drawRect } from "./utilities";
-import swal from "sweetalert";
-import { UploadClient } from "@uploadcare/upload-client";
+import React, { useRef, useState, useEffect } from 'react';
+import * as tf from '@tensorflow/tfjs';
+import * as cocossd from '@tensorflow-models/coco-ssd';
+import Webcam from 'react-webcam';
+import { drawRect } from './utilities';
+import { Box, Card } from '@mui/material';
+import swal from 'sweetalert';
+import { UploadClient } from '@uploadcare/upload-client';
+import { useUpdateCheatingLogMutation } from '../../../slices/cheatingLogApiSlice';
 
-const client = new UploadClient({ publicKey: "e69ab6e5db6d4a41760b" });
+const client = new UploadClient({ publicKey: 'ef79ad747b4167c96537' });
 
-export default function Home({ cheatingLog, updateCheatingLog }) {
+export default function Home({ cheatingLog }) {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const [lastDetectionTime, setLastDetectionTime] = useState({});
   const [screenshots, setScreenshots] = useState([]);
 
+  // RTK Query mutation hook
+  const [updateCheatingLog] = useUpdateCheatingLogMutation();
+
+  // Load existing screenshots when log changes
   useEffect(() => {
-    if (cheatingLog?.screenshots) setScreenshots(cheatingLog.screenshots);
+    if (cheatingLog && cheatingLog.screenshots) {
+      setScreenshots(cheatingLog.screenshots);
+    }
   }, [cheatingLog]);
 
+  // Capture and upload screenshot
   const captureScreenshotAndUpload = async (type) => {
     const video = webcamRef.current?.video;
-    if (!video || video.readyState !== 4 || video.videoWidth === 0) return null;
+    if (!video || video.readyState !== 4 || video.videoWidth === 0 || video.videoHeight === 0) {
+      console.warn('Video not ready for screenshot');
+      return null;
+    }
 
-    const canvas = document.createElement("canvas");
+    const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const dataUrl = canvas.toDataURL("image/jpeg");
+    const dataUrl = canvas.toDataURL('image/jpeg');
     const file = dataURLtoFile(dataUrl, `cheating_${Date.now()}.jpg`);
 
     try {
       const result = await client.uploadFile(file);
-      const screenshot = { url: result.cdnUrl, type, detectedAt: new Date() };
+      console.log('✅ Uploaded to Uploadcare:', result.cdnUrl);
+
+      const screenshot = {
+        url: result.cdnUrl,
+        type: type,
+        detectedAt: new Date(),
+      };
+
+      // Update local state
       setScreenshots((prev) => [...prev, screenshot]);
       return screenshot;
-    } catch (err) {
-      console.error("Upload failed:", err);
+    } catch (error) {
+      console.error('❌ Upload failed:', error);
       return null;
     }
   };
 
+  // Handle a cheating detection event
   const handleDetection = async (type) => {
     const now = Date.now();
-    if (now - (lastDetectionTime[type] || 0) < 3000) return;
+    const lastTime = lastDetectionTime[type] || 0;
 
-    setLastDetectionTime((prev) => ({ ...prev, [type]: now }));
-    const screenshot = await captureScreenshotAndUpload(type);
+    // Prevent duplicate alerts within 3s
+    if (now - lastTime >= 3000) {
+      setLastDetectionTime((prev) => ({ ...prev, [type]: now }));
 
-    if (screenshot) {
-      const updatedLog = {
-        ...cheatingLog,
-        [`${type}Count`]: (cheatingLog[`${type}Count`] || 0) + 1,
-        screenshots: [...(cheatingLog.screenshots || []), screenshot],
-      };
-      updateCheatingLog(updatedLog);
+      const screenshot = await captureScreenshotAndUpload(type);
+
+      if (screenshot && cheatingLog?._id) {
+        const updatedLog = {
+          ...cheatingLog,
+          [`${type}Count`]: (cheatingLog[`${type}Count`] || 0) + 1,
+          screenshots: [...(cheatingLog.screenshots || []), screenshot],
+        };
+
+        console.log('📤 Saving cheating log:', updatedLog);
+
+        try {
+          await updateCheatingLog({ id: cheatingLog._id, ...updatedLog }).unwrap();
+        } catch (error) {
+          console.error('❌ Failed to update cheating log:', error);
+        }
+      }
+
+      // Alerts
+      switch (type) {
+        case 'noFace':
+          swal('Face Not Visible', 'Warning Recorded', 'warning');
+          break;
+        case 'multipleFace':
+          swal('Multiple Faces Detected', 'Warning Recorded', 'warning');
+          break;
+        case 'cellPhone':
+          swal('Cell Phone Detected', 'Warning Recorded', 'warning');
+          break;
+        case 'prohibitedObject':
+          swal('Prohibited Object Detected', 'Warning Recorded', 'warning');
+          break;
+        default:
+          break;
+      }
     }
-
-    const messages = {
-      noFace: "Face Not Visible",
-      multipleFace: "Multiple Faces Detected",
-      cellPhone: "Cell Phone Detected",
-      prohibitedObject: "Prohibited Object Detected",
-    };
-    if (messages[type]) swal(messages[type], "Warning Recorded", "warning");
   };
 
+  // Run Coco-SSD model
   const runCoco = async () => {
     try {
       const net = await cocossd.load();
-      console.log("AI model loaded.");
+      console.log('✅ AI model loaded.');
       setInterval(() => detect(net), 1000);
-    } catch (err) {
-      console.error(err);
-      swal("Error", "Failed to load AI model. Please refresh the page.", "error");
+    } catch (error) {
+      console.error('❌ Error loading model:', error);
+      swal('Error', 'Failed to load AI model. Please refresh the page.', 'error');
     }
   };
 
+  // Object detection
   const detect = async (net) => {
-    const video = webcamRef.current?.video;
-    if (!video || video.readyState !== 4) return;
+    if (webcamRef.current && webcamRef.current.video && webcamRef.current.video.readyState === 4) {
+      const video = webcamRef.current.video;
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
 
-    const ctx = canvasRef.current.getContext("2d");
-    canvasRef.current.width = video.videoWidth;
-    canvasRef.current.height = video.videoHeight;
+      webcamRef.current.video.width = videoWidth;
+      webcamRef.current.video.height = videoHeight;
+      canvasRef.current.width = videoWidth;
+      canvasRef.current.height = videoHeight;
 
-    try {
-      const objects = await net.detect(video);
-      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-      drawRect(objects, ctx);
+      try {
+        const obj = await net.detect(video);
+        const ctx = canvasRef.current.getContext('2d');
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        drawRect(obj, ctx);
 
-      let person_count = 0;
-      let faceDetected = false;
+        let personCount = 0;
+        let faceDetected = false;
 
-      objects.forEach((obj) => {
-        const cls = obj.class;
-        if (cls === "cell phone") handleDetection("cellPhone");
-        if (cls === "book" || cls === "laptop") handleDetection("prohibitedObject");
-        if (cls === "person") {
-          faceDetected = true;
-          person_count++;
-          if (person_count > 1) handleDetection("multipleFace");
-        }
-      });
+        obj.forEach((element) => {
+          const detectedClass = element.class;
+          console.log('Detected:', detectedClass);
 
-      if (!faceDetected) handleDetection("noFace");
-    } catch (err) {
-      console.error("Detection error:", err);
+          if (detectedClass === 'cell phone') handleDetection('cellPhone');
+          if (detectedClass === 'book' || detectedClass === 'laptop') handleDetection('prohibitedObject');
+          if (detectedClass === 'person') {
+            faceDetected = true;
+            personCount++;
+            if (personCount > 1) handleDetection('multipleFace');
+          }
+        });
+
+        if (!faceDetected) handleDetection('noFace');
+      } catch (error) {
+        console.error('Error during detection:', error);
+      }
     }
   };
 
@@ -115,26 +167,43 @@ export default function Home({ cheatingLog, updateCheatingLog }) {
   }, []);
 
   return (
-    <div className="relative w-full h-full min-h-screen">
-      <Webcam
-        ref={webcamRef}
-        audio={false}
-        muted
-        screenshotFormat="image/jpeg"
-        videoConstraints={{ width: 640, height: 480, facingMode: "user" }}
-        className="w-full h-full object-cover"
-      />
-      <canvas
-        ref={canvasRef}
-        className="absolute top-0 left-0 w-full h-full z-10"
-      />
-    </div>
+    <Box>
+      <Card variant="outlined" sx={{ position: 'relative', width: '100%', height: '100%' }}>
+        <Webcam
+          ref={webcamRef}
+          audio={false}
+          muted
+          screenshotFormat="image/jpeg"
+          videoConstraints={{
+            width: 640,
+            height: 480,
+            facingMode: 'user',
+          }}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+          }}
+        />
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 10,
+          }}
+        />
+      </Card>
+    </Box>
   );
 }
 
-// Helper function
+// Helper: convert base64 → File
 function dataURLtoFile(dataUrl, fileName) {
-  const arr = dataUrl.split(",");
+  const arr = dataUrl.split(',');
   const mime = arr[0].match(/:(.*?);/)[1];
   const bstr = atob(arr[1]);
   let n = bstr.length;

@@ -48,7 +48,7 @@ import TeacherRoute from "./views/authentication/TeacherRoute.jsx";
 const Router = createBrowserRouter(
   createRoutesFromElements(
     <>
-      {/* Public Landing Page - First Route */}
+      {/* Public Landing Page */}
       <Route path="/" element={<LandingPage />} />
       
       {/* Authentication Routes - Public */}
@@ -59,10 +59,9 @@ const Router = createBrowserRouter(
       </Route>
 
       {/* Private Routes - Require Authentication */}
-      <Route path="/app" element={<PrivateRoute />}>
+      <Route path="" element={<PrivateRoute />}>
         {/* Main App Layout */}
         <Route path="" element={<FullLayout />}>
-          <Route index element={<ExamPage />} />
           <Route path="dashboard" element={<ExamPage />} />
           <Route path="success" element={<Success />} />
           <Route path="exam" element={<ExamPage />} />

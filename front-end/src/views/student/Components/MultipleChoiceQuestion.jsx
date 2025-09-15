@@ -9,7 +9,7 @@ import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-;
+
 import { useNavigate, useParams } from 'react-router';
 import axiosInstance from '../../../axios';
 import { toast } from 'react-toastify';
@@ -94,10 +94,11 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
   };
 
   return (
-    <Card
+    <Card className='grid-item '
       style={{
-        width: '50%',
+        width: '100%',
         boxShadow: '2px',
+        margin: '5px',
       }}
     >
       <CardContent
@@ -105,10 +106,12 @@ export default function MultipleChoiceQuestion({ questions, saveUserTestScore, s
           boxShadow: '4px',
           padding: '2px',
           paddingRight: '4px',
-          margin: '3px',
+          margin: '5px',
+          
+          
         }}
       >
-        <Typography s variant="h4" mb={3}>
+        <Typography sx variant="h4" mb={3}>
           Question {currentQuestion + 1}:
         </Typography>
         <Typography variant="body1" mb={3}>

@@ -69,7 +69,7 @@ const DescriptionAndInstructions = () => {
           Description
         </Typography>
         <Typography>
-          This practice test will allow you to measure your skills at the beginner level by
+          This practice test will allow you to measure your Python skills at the beginner level by
           the way of various multiple choice questions. We recommend you to score at least 75% in
           this test before moving to the next level questionnaire. It will help you in identifying
           your strength and development areas. Based on the same you can plan your next steps in

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Box, Grid, CircularProgress } from "@mui/material";
+import PageContainer from "../../components/container/PageContainer";
+import BlankCard from "../../components/shared/BlankCard";
 import MultipleChoiceQuestion from "./Components/MultipleChoiceQuestion";
 import NumberOfQuestions from "./Components/NumberOfQuestions";
 import WebCam from "./Components/WebCam";
@@ -8,7 +10,7 @@ import { useGetExamsQuery, useGetQuestionsQuery } from "../../slices/examApiSlic
 import { useSaveCheatingLogMutation } from "../../slices/cheatingLogApiSlice";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { useCheatingLog } from "../../context/CheatingLogContext.jsx";
+import { useCheatingLog } from "../../context/CheatingLogContext";
 
 const TestPage = () => {
   const { examId } = useParams();
@@ -20,10 +22,6 @@ const TestPage = () => {
   const [saveCheatingLogMutation] = useSaveCheatingLogMutation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMcqCompleted, setIsMcqCompleted] = useState(false);
-  const [questions, setQuestions] = useState([]);
-  const { data, isLoading } = useGetQuestionsQuery(examId);
-  const [score, setScore] = useState(0);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (userExamdata) {
@@ -35,8 +33,15 @@ const TestPage = () => {
     }
   }, [userExamdata, examId]);
 
+  const [questions, setQuestions] = useState([]);
+  const { data, isLoading } = useGetQuestionsQuery(examId);
+  const [score, setScore] = useState(0);
+  const navigate = useNavigate();
+
   useEffect(() => {
-    if (data) setQuestions(data);
+    if (data) {
+      setQuestions(data);
+    }
   }, [data]);
 
   const handleMcqCompletion = () => {
@@ -65,72 +70,78 @@ const TestPage = () => {
       toast.success("Test submitted successfully!");
       navigate("/Success");
     } catch (error) {
-      toast.error(error?.data?.message || "Failed to save test logs.");
+      toast.error(
+        error?.data?.message || error?.message || "Failed to save test logs. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const saveUserTestScore = () => setScore(score + 1);
+  const saveUserTestScore = () => {
+    setScore(score + 1);
+  };
 
   if (isExamsLoading) {
     return (
-      <Box className="flex justify-center items-center min-h-screen">
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
         <CircularProgress />
       </Box>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-          {selectedExam?.examName || "Test Page"}
-        </h1>
-
+    <PageContainer title="Exam Page" description="MCQ Test Interface">
+      <Box className="pt-6 px-3 md:px-8">
         <Grid container spacing={4}>
-          {/* Left Section (Questions) */}
-          <Grid item xs={12} md={7}>
-            <Box className="bg-white shadow-xl rounded-2xl p-6 border border-gray-100">
-              {isLoading ? (
-                <div className="flex justify-center items-center h-64">
-                  <CircularProgress />
-                </div>
-              ) : (
-                <MultipleChoiceQuestion
-                  submitTest={isMcqCompleted ? handleTestSubmission : handleMcqCompletion}
-                  questions={data}
-                  saveUserTestScore={saveUserTestScore}
-                />
-              )}
-            </Box>
+          {/* Left Half: Questions */}
+          <Grid item xs={12} md={8}>
+            <BlankCard>
+              <Box className=" w-svh p-6 bg-white rounded-2xl shadow-md min-h-[70vh] flex flex-col">
+                {isLoading ? (
+                  <Box className="flex justify-center items-center h-full">
+                    <CircularProgress />
+                  </Box>
+                ) : (
+                  <MultipleChoiceQuestion
+                    submitTest={isMcqCompleted ? handleTestSubmission : handleMcqCompletion}
+                    questions={data}
+                    saveUserTestScore={saveUserTestScore}
+                  />
+                )}
+              </Box>
+            </BlankCard>
           </Grid>
 
-          {/* Right Section (Sidebar) */}
-          <Grid item xs={12} md={5}>
-            <Grid container spacing={4}>
-              {/* Question Tracker */}
-              <Grid item xs={12}>
-                <Box className="bg-white shadow-md rounded-2xl p-6 border border-gray-100 h-full">
-                  <NumberOfQuestions
-                    questionLength={questions.length}
-                    submitTest={isMcqCompleted ? handleTestSubmission : handleMcqCompletion}
-                    examDurationInSeconds={examDurationInSeconds}
-                  />
-                </Box>
+          {/* Right Half: Sidebar (Questions count + Camera) */}
+          <Grid item xs={12} md={4}>
+            <Grid container spacing={4} direction="column">
+              {/* Questions/Timer */}
+              <Grid item>
+                <BlankCard>
+                  <Box className="w-full p-2 rounded-2xl bg-gradient-to-r 0  shadow-md">
+                    <NumberOfQuestions
+                      questionLength={questions.length}
+                      submitTest={isMcqCompleted ? handleTestSubmission : handleMcqCompletion}
+                      examDurationInSeconds={examDurationInSeconds}
+                    />
+                  </Box>
+                </BlankCard>
               </Grid>
 
-              {/* Webcam Monitor */}
-              <Grid item xs={12}>
-                <Box className="bg-white shadow-md rounded-2xl p-4 border border-gray-100 flex justify-center items-center">
-                  <WebCam cheatingLog={cheatingLog} updateCheatingLog={updateCheatingLog} />
-                </Box>
+              {/* Webcam */}
+              <Grid item>
+              
+                  <Box className="w-60 h-60 flex items-center justify-center rounded-2xl bg-gray-100 shadow-md overflow-hidden">
+                    <WebCam cheatingLog={cheatingLog} updateCheatingLog={updateCheatingLog} />
+                  </Box>
+                
               </Grid>
             </Grid>
           </Grid>
         </Grid>
-      </div>
-    </div>
+      </Box>
+    </PageContainer>
   );
 };
 

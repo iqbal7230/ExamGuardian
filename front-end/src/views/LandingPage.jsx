@@ -64,12 +64,12 @@ const LandingPage = () => {
     ];
 
     const handleGetStarted = () => {
-        if (userInfo) navigate('/app/dashboard');
+        if (userInfo) navigate('/dashboard');
         else navigate('/auth/register');
     };
 
     const handleLogin = () => navigate('/auth/login');
-    const handleDashboard = () => navigate('/app/dashboard');
+    const handleDashboard = () => navigate('/dashboard');
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">

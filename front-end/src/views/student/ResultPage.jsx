@@ -1,37 +1,83 @@
-import React, { useState, useEffect } from "react";
-import axiosInstance from "../../axios";
-import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
-import SyntaxHighlighter from "react-syntax-highlighter";
-import { docco } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  IconButton,
+  Card,
+  CardContent,
+  Grid,
+  CircularProgress,
+  Alert,
+  Tabs,
+  Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  InputAdornment,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+} from '@mui/material';
+import { Code, Visibility, VisibilityOff, Search, CheckCircle } from '@mui/icons-material';
+import PageContainer from '../../components/container/PageContainer';
+import DashboardCard from '../../components/shared/DashboardCard';
+import axiosInstance from '../../axios';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 const ResultPage = () => {
   const { userInfo } = useSelector((state) => state.auth);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedTab, setSelectedTab] = useState(0);
   const [selectedResult, setSelectedResult] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+  const [codeDialogOpen, setCodeDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedExam, setSelectedExam] = useState('all');
+  const [exams, setExams] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Fetch all exams first
+        const examsResponse = await axiosInstance.get('/api/users/exam', {
+          withCredentials: true,
+        });
+        setExams(examsResponse.data);
 
-        if (userInfo?.role === "teacher") {
-          const res = await axiosInstance.get("/api/users/results/all", {
+        // Fetch results based on user role
+        if (userInfo?.role === 'teacher') {
+          // For teachers, fetch all results
+          const resultsResponse = await axiosInstance.get('/api/users/results/all', {
             withCredentials: true,
           });
-          setResults(res.data.data);
+          setResults(resultsResponse.data.data);
         } else {
-          const res = await axiosInstance.get("/api/users/results/user", {
+          // For students, fetch only their visible results
+          const resultsResponse = await axiosInstance.get('/api/users/results/user', {
             withCredentials: true,
           });
-          setResults(res.data.data);
+          setResults(resultsResponse.data.data);
         }
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch data");
-        toast.error("Failed to fetch data");
+        setError(err.response?.data?.message || 'Failed to fetch data');
+        toast.error('Failed to fetch data');
       } finally {
         setLoading(false);
       }
@@ -40,144 +86,387 @@ const ResultPage = () => {
     fetchData();
   }, [userInfo]);
 
+  const handleToggleVisibility = async (resultId) => {
+    try {
+      await axiosInstance.put(
+        `/api/users/results/${resultId}/toggle-visibility`,
+        {},
+        {
+          withCredentials: true,
+        },
+      );
+      toast.success('Visibility updated successfully');
+      // Refresh results
+      const response = await axiosInstance.get('/api/users/results/all', {
+        withCredentials: true,
+      });
+      setResults(response.data.data);
+    } catch (err) {
+      toast.error('Failed to update visibility');
+    }
+  };
+
   const handleViewCode = (result) => {
     setSelectedResult(result);
-    setShowModal(true);
+    setCodeDialogOpen(true);
   };
+
+  const handleExamChange = async (examId) => {
+    setSelectedExam(examId);
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(`/api/users/results/exam/${examId}`, {
+        withCredentials: true,
+      });
+      setResults(response.data.data);
+    } catch (err) {
+      toast.error('Failed to fetch exam results');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredResults = results.filter((result) => {
+    const matchesSearch =
+      result.userId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      result.userId?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesExam = selectedExam === 'all' || result.examId === selectedExam;
+    return matchesSearch && matchesExam;
+  });
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-      </div>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <div className="p-6 text-center text-red-600 font-semibold">{error}</div>
+      <Box p={3}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">
-        {userInfo?.role === "teacher" ? "Results Dashboard" : "My Exam Results"}
-      </h1>
+  // Student View
+  if (userInfo?.role === 'student') {
+    return (
+      <PageContainer title="My Exam Results" description="View your exam results">
+        <Grid container spacing={3}>
+          {/* Summary Cards */}
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Total Exams Taken
+                </Typography>
+                <Typography variant="h3">{results.length}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Average Score
+                </Typography>
+                <Typography variant="h3">
+                  {results.length > 0
+                    ? `${(
+                        results.reduce((acc, curr) => acc + curr.percentage, 0) / results.length
+                      ).toFixed(1)}%`
+                    : '0%'}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Total Submissions
+                </Typography>
+                <Typography variant="h3">
+                  {results.reduce((acc, curr) => acc + (curr.codingSubmissions?.length || 0), 0)}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white shadow rounded-xl p-6">
-          <h2 className="text-gray-600 font-medium">Total Exams</h2>
-          <p className="text-3xl font-bold">{results.length}</p>
-        </div>
-        <div className="bg-white shadow rounded-xl p-6">
-          <h2 className="text-gray-600 font-medium">Average Score</h2>
-          <p className="text-3xl font-bold">
-            {results.length > 0
-              ? `${(
-                  results.reduce((a, c) => a + c.percentage, 0) / results.length
-                ).toFixed(1)}%`
-              : "0%"}
-          </p>
-        </div>
-        <div className="bg-white shadow rounded-xl p-6">
-          <h2 className="text-gray-600 font-medium">Total Submissions</h2>
-          <p className="text-3xl font-bold">
-            {results.reduce(
-              (acc, curr) => acc + (curr.codingSubmissions?.length || 0),
-              0
-            )}
-          </p>
-        </div>
-      </div>
+          {/* Results Table */}
+          <Grid item xs={12}>
+            <DashboardCard title="My Results">
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Exam Name</TableCell>
+                      <TableCell>MCQ Score</TableCell>
+                      <TableCell>Coding Submissions</TableCell>
+                      <TableCell>Total Score</TableCell>
+                      <TableCell>Submission Date</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {results.map((result) => (
+                      <TableRow key={result._id}>
+                        <TableCell>{result.examId?.examName || 'Exam'}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={`${result.percentage.toFixed(1)}%`}
+                            color={result.percentage >= 70 ? 'success' : 'warning'}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <CheckCircle color="success" fontSize="small" />
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" color="textSecondary">
+                            Total: {result.totalMarks}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>{new Date(result.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          {result.codingSubmissions?.length > 0 && (
+                            <IconButton onClick={() => handleViewCode(result)}>
+                              <Code />
+                            </IconButton>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </DashboardCard>
+          </Grid>
+        </Grid>
 
-      {/* Results Table */}
-      <div className="bg-white shadow rounded-xl overflow-hidden">
-        <table className="w-full border-collapse">
-          <thead className="bg-gray-100 text-left text-sm font-semibold text-gray-700">
-            <tr>
-              {userInfo?.role === "teacher" && <th className="p-3">Student</th>}
-              <th className="p-3">Exam</th>
-              <th className="p-3">Score</th>
-              <th className="p-3">Total Marks</th>
-              <th className="p-3">Date</th>
-              <th className="p-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((result) => (
-              <tr
-                key={result._id}
-                className="border-b hover:bg-gray-50 text-sm"
-              >
-                {userInfo?.role === "teacher" && (
-                  <td className="p-3">{result.userId?.name}</td>
-                )}
-                <td className="p-3">{result.examId?.examName || "Exam"}</td>
-                <td className="p-3">
-                  <span
-                    className={`px-3 py-1 rounded-full text-white text-xs ${
-                      result.percentage >= 70 ? "bg-green-500" : "bg-yellow-500"
-                    }`}
-                  >
-                    {result.percentage.toFixed(1)}%
-                  </span>
-                </td>
-                <td className="p-3">{result.totalMarks}</td>
-                <td className="p-3">
-                  {new Date(result.createdAt).toLocaleDateString()}
-                </td>
-                <td className="p-3">
-                  {result.codingSubmissions?.length > 0 && (
-                    <button
-                      onClick={() => handleViewCode(result)}
-                      className="px-3 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-lg"
-                    >
-                      View Code
-                    </button>
+        {/* Code View Dialog */}
+        <Dialog
+          open={codeDialogOpen}
+          onClose={() => setCodeDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>My Code Submissions</DialogTitle>
+          <DialogContent>
+            {selectedResult?.codingSubmissions?.map((submission, index) => (
+              <Box key={index} mb={3}>
+                <Typography variant="h6" gutterBottom>
+                  Question {index + 1}
+                </Typography>
+                <Typography variant="body2" color="textSecondary" gutterBottom>
+                  Language: {submission.language}
+                </Typography>
+                <SyntaxHighlighter language={submission.language} style={docco}>
+                  {submission.code}
+                </SyntaxHighlighter>
+                <Box mt={1}>
+                  <Chip icon={<CheckCircle />} label="Success" color="success" />
+                  {submission.executionTime && (
+                    <Chip label={`Execution Time: ${submission.executionTime}ms`} sx={{ ml: 1 }} />
                   )}
-                </td>
-              </tr>
+                </Box>
+              </Box>
             ))}
-          </tbody>
-        </table>
-      </div>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCodeDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+      </PageContainer>
+    );
+  }
 
-      {/* Code View Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-3xl">
-            <h2 className="text-xl font-semibold mb-4">
-              Code Submissions
-            </h2>
-            <div className="max-h-[500px] overflow-y-auto">
-              {selectedResult?.codingSubmissions?.map((submission, i) => (
-                <div key={i} className="mb-6">
-                  <h3 className="text-lg font-medium mb-2">
-                    Question {i + 1} ({submission.language})
-                  </h3>
-                  <SyntaxHighlighter
-                    language={submission.language}
-                    style={docco}
-                  >
-                    {submission.code}
-                  </SyntaxHighlighter>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+  // Teacher View
+  return (
+    <PageContainer title="Results Dashboard" description="View and manage exam results">
+      <Grid container spacing={3}>
+        {/* Summary Cards */}
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Total Students
+              </Typography>
+              <Typography variant="h3">{filteredResults.length}</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Average Score
+              </Typography>
+              <Typography variant="h3">
+                {filteredResults.length > 0
+                  ? `${(
+                      filteredResults.reduce((acc, curr) => acc + curr.percentage, 0) /
+                      filteredResults.length
+                    ).toFixed(1)}%`
+                  : '0%'}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Total Submissions
+              </Typography>
+              <Typography variant="h3">
+                {filteredResults.reduce(
+                  (acc, curr) => acc + (curr.codingSubmissions?.length || 0),
+                  0,
+                )}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Results Table */}
+        <Grid item xs={12}>
+          <DashboardCard title="Exam Results">
+            {/* Exam Filter and Search */}
+            <Box mb={3} display="flex" gap={2}>
+              <FormControl sx={{ minWidth: 200 }}>
+                <InputLabel>Select Exam</InputLabel>
+                <Select
+                  value={selectedExam}
+                  onChange={(e) => handleExamChange(e.target.value)}
+                  label="Select Exam"
+                >
+                  <MenuItem value="all">All Exams</MenuItem>
+                  {exams.map((exam) => (
+                    <MenuItem key={exam._id} value={exam._id}>
+                      {exam.examName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                label="Search Students"
+                variant="outlined"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{ minWidth: 200 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+
+            <Tabs
+              value={selectedTab}
+              onChange={(e, newValue) => setSelectedTab(newValue)}
+              sx={{ mb: 2 }}
+            >
+              <Tab label="All Results" />
+              <Tab label="MCQ Results" />
+              <Tab label="Coding Results" />
+            </Tabs>
+
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Student Name</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Exam</TableCell>
+                    <TableCell>MCQ Score</TableCell>
+                    <TableCell>Coding Submissions</TableCell>
+                    <TableCell>Total Score</TableCell>
+                    <TableCell>Submission Date</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredResults.map((result) => (
+                    <TableRow key={result._id}>
+                      <TableCell>{result.userId?.name}</TableCell>
+                      <TableCell>{result.userId?.email}</TableCell>
+                      <TableCell>
+                        {exams.find((e) => e._id === result.examId)?.examName || result.examId}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={`${result.percentage.toFixed(1)}%`}
+                          color={result.percentage >= 70 ? 'success' : 'warning'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <CheckCircle color="success" fontSize="small" />
+                        </Box>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="textSecondary">
+                          Total: {result.totalMarks}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{new Date(result.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        <IconButton
+                          onClick={() => handleToggleVisibility(result._id)}
+                          color={result.showToStudent ? 'success' : 'default'}
+                        >
+                          {result.showToStudent ? <Visibility /> : <VisibilityOff />}
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </DashboardCard>
+        </Grid>
+      </Grid>
+
+      {/* Code View Dialog */}
+      <Dialog
+        open={codeDialogOpen}
+        onClose={() => setCodeDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Student Code Submissions</DialogTitle>
+        <DialogContent>
+          {selectedResult?.codingSubmissions?.map((submission, index) => (
+            <Box key={index} mb={3}>
+              <Typography variant="h6" gutterBottom>
+                Question {index + 1}
+              </Typography>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Language: {submission.language}
+              </Typography>
+              <SyntaxHighlighter language={submission.language} style={docco}>
+                {submission.code}
+              </SyntaxHighlighter>
+              <Box mt={1}>
+                <Chip icon={<CheckCircle />} label="Success" color="success" />
+                {submission.executionTime && (
+                  <Chip label={`Execution Time: ${submission.executionTime}ms`} sx={{ ml: 1 }} />
+                )}
+              </Box>
+            </Box>
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCodeDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    </PageContainer>
   );
 };
 

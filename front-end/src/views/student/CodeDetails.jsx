@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Button,
   Card,
@@ -8,171 +8,182 @@ import {
   Grid,
   List,
   ListItem,
-  Typography,
+  ListItemText,
+  Radio,
   Stack,
-  Divider,
-} from "@mui/material";
-import Paper from "@mui/material/Paper";
-import { useNavigate, useParams } from "react-router";
+  Typography,
+} from '@mui/material';
+import Paper from '@mui/material/Paper';
+import { useNavigate, useParams } from 'react-router';
 
 const CodeDetailsMore = () => {
   const [certify, setCertify] = useState(false);
   const navigate = useNavigate();
+  const handleCertifyChange = () => {
+    setCertify(!certify);
+  };
   const { examId } = useParams();
 
-  const handleCertifyChange = () => setCertify(!certify);
-
-  const handleCodeTest = () => {
+  function handleCodeTest() {
     navigate(`/exam/${examId}/code`);
-  };
-
+  }
   return (
-    <Card
-      elevation={8}
-      sx={{
-        borderRadius: 3,
-        overflow: "hidden",
-        bgcolor: "background.paper",
-        mt: 4,
-        mx: { xs: 2, sm: 4 },
-      }}
-    >
-      <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
-        {/* Heading */}
-        <Typography variant="h4" gutterBottom fontWeight="bold" color="primary">
-          Test Description
-        </Typography>
-        <Typography variant="body1" color="text.secondary" paragraph>
-          This practice test will allow you to measure your Python skills at the
-          beginner level through multiple-choice questions. We recommend scoring
-          at least <strong>75%</strong> before moving to the next level. It will
-          help you identify your strengths and areas for improvement.
-        </Typography>
+    <div>
+      <Card>
+        <CardContent>
+          <Typography variant="h2" mb={3}>
+            Description
+          </Typography>
+          <Typography>
+            This practice test will allow you to measure your Python skills at the beginner level by
+            the way of various multiple choice questions. We recommend you to score at least 75% in
+            this test before moving to the next level questionnaire. It will help you in identifying
+            your strength and development areas. Based on the same you can plan your next steps in
+            learning Python and preparing for job placements.
+          </Typography>
 
-        <Typography variant="body2" color="text.secondary" mb={3}>
-          #Python #Coding #Software #MCQ #Beginner #ProgrammingLanguage
-        </Typography>
+          <Typography>#Python #Coding #Software #MCQ #Beginner #Programming Language</Typography>
 
-        <Divider sx={{ my: 3 }} />
-
-        {/* Instructions */}
-        <Typography variant="h5" gutterBottom fontWeight="medium" color="secondary">
-          Test Instructions
-        </Typography>
-        <List sx={{ pl: 2 }}>
-          {[
-            "This Practice Test consists of only MCQ questions.",
-            "There is Negative Marking for wrong answers.",
-            "Do Not switch tabs while taking the test. Switching Tabs will End the test.",
-            "The test will only run in full screen mode.",
-            "Arrange blank sheets for rough work before starting.",
-            "Clicking Back or Next will save the answer.",
-            "Questions can be reattempted until the test ends.",
-            "Click 'Finish Test' once you are done.",
-            "You will be able to view your scores after completion.",
-          ].map((instruction, idx) => (
-            <ListItem key={idx} sx={{ py: 0.8 }}>
-              <Typography variant="body1" color="text.primary">
-                {instruction}
-              </Typography>
-            </ListItem>
-          ))}
-        </List>
-
-        <Divider sx={{ my: 3 }} />
-
-        {/* Confirmation */}
-        <Typography variant="h5" gutterBottom fontWeight="medium" color="error">
-          Confirmation
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mb={3}>
-          Your actions will be monitored, and any signs of misconduct may lead to
-          suspension or cancellation of your test.
-        </Typography>
-
-        <Stack direction="column" alignItems="center" spacing={3}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={certify}
-                onChange={handleCertifyChange}
+          <>
+            <Typography variant="h3" mb={3} mt={3}>
+              Test Instructions
+            </Typography>
+            <List>
+              <ol>
+                <li>
+                  <ListItemText>
+                    <Typography variant="body1">
+                      This Practice Test consists of only <strong>MCQ questions.</strong>
+                    </Typography>
+                  </ListItemText>
+                </li>
+                <li>
+                  <ListItemText>
+                    <Typography variant="body1">
+                      There are a total of <strong>40 questions.</strong> Test Duration is{' '}
+                      <strong>30 minutes.</strong>
+                    </Typography>
+                  </ListItemText>
+                </li>
+                <li>
+                  <ListItemText>
+                    <Typography variant="body1">
+                      There is <strong>Negative Marking</strong> for wrong answers.
+                    </Typography>
+                  </ListItemText>
+                </li>
+                <li>
+                  <ListItemText>
+                    <Typography variant="body1">
+                      <strong>Do Not switch tabs </strong> while taking the test.
+                      <strong> Switching Tabs will Block / End the test automatically.</strong>
+                    </Typography>
+                  </ListItemText>
+                </li>
+                <li>
+                  <ListItemText>
+                    <Typography variant="body1">
+                      The test will only run in <strong>full screen mode.</strong> Do not switch
+                      back to tab mode. Test will end automatically.
+                    </Typography>
+                  </ListItemText>
+                </li>
+                <li>
+                  <ListItemText>
+                    <Typography variant="body1">
+                      You may need to use blank sheets for rough work. Please arrange for blank
+                      sheets before starting.
+                    </Typography>
+                  </ListItemText>
+                </li>
+                <li>
+                  <ListItemText>
+                    <Typography variant="body1">
+                      Clicking on Back or Next will save the answer.
+                    </Typography>
+                  </ListItemText>
+                </li>
+                <li>
+                  <ListItemText>
+                    <Typography variant="body1">
+                      Questions can be reattempted till the time test is running.
+                    </Typography>
+                  </ListItemText>
+                </li>
+                <li>
+                  <ListItemText>
+                    <Typography variant="body1">
+                      Click on the finish test once you are done with the test.
+                    </Typography>
+                  </ListItemText>
+                </li>
+                <li>
+                  <ListItemText>
+                    <Typography variant="body1">
+                      You will be able to view the scores once your test is complete.
+                    </Typography>
+                  </ListItemText>
+                </li>
+              </ol>
+            </List>
+          </>
+          <Typography variant="h3" mb={3} mt={3}>
+            Confirmation
+          </Typography>
+          <Typography mb={3}>
+            Your actions shall be proctored and any signs of wrongdoing may lead to suspension or
+            cancellation of your test.
+          </Typography>
+          <Stack direction="column" alignItems="center" spacing={3}>
+            <FormControlLabel
+              control={
+                <Checkbox checked={certify} onChange={handleCertifyChange} color="primary" />
+              }
+              label="I certify that I have carefully read and agree to all of the instructions mentioned above"
+            />
+            <div style={{ display: 'flex', padding: '2px', margin: '10px' }}>
+              <Button
+                onClick={handleCodeTest}
+                style={{ marginLeft: '21px' }}
+                disabled={!certify}
+                variant="contained"
                 color="primary"
-              />
-            }
-            label={
-              <Typography variant="body2" color="text.secondary">
-                I certify that I have carefully read and agree to the above
-                instructions.
-              </Typography>
-            }
-          />
-
-          <Button
-            onClick={handleCodeTest}
-            disabled={!certify}
-            variant="contained"
-            color="primary"
-            size="large"
-            sx={{
-              px: 5,
-              py: 1.2,
-              fontWeight: "bold",
-              borderRadius: 2,
-              boxShadow: 4,
-              textTransform: "none",
-            }}
-          >
-            Start Coding Test
-          </Button>
-        </Stack>
-      </CardContent>
-    </Card>
+              >
+                Coding test
+              </Button>
+            </div>
+          </Stack>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
 const imgUrl =
-  "https://cdn-api.elice.io/api-attachment/attachment/61bd920a02e1497b8f9fab92d566e103/image.jpeg";
-
+  'https://cdn-api.elice.io/api-attachment/attachment/61bd920a02e1497b8f9fab92d566e103/image.jpeg';
 export function CodeDetails() {
   return (
-    <Grid container sx={{ height: "100vh" }}>
-      {/* Left Side Image */}
-      <Grid
-        item
-        xs={false}
-        sm={4}
-        md={7}
-        sx={{
-          backgroundImage: `url(${imgUrl})`,
-          backgroundRepeat: "no-repeat",
-          backgroundColor: (t) =>
-            t.palette.mode === "light"
-              ? t.palette.grey[50]
-              : t.palette.grey[900],
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-
-      {/* Right Side Content */}
-      <Grid
-        item
-        xs={12}
-        sm={8}
-        md={5}
-        component={Paper}
-        elevation={6}
-        square
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          bgcolor: "background.default",
-        }}
-      >
-        <CodeDetailsMore />
+    <>
+      <Grid container sx={{ height: '100vh' }}>
+        <Grid
+          item
+          xs={false}
+          sm={4}
+          md={7}
+          sx={{
+            backgroundImage: `url(${imgUrl})`, // 'url(https://source.unsplash.com/random?wallpapers)',
+            backgroundRepeat: 'no-repeat',
+            backgroundColor: (t) =>
+              t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900],
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
+          <CodeDetailsMore />
+        </Grid>
       </Grid>
-    </Grid>
+    </>
   );
 }
 

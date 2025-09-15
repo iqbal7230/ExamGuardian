@@ -13,6 +13,7 @@ import {
 import {
   getCheatingLogsByExamId,
   saveCheatingLog,
+  updateCheatingLog,
 } from "../controllers/cheatingLogController.js";
 const examRoutes = express.Router();
 
@@ -23,5 +24,6 @@ examRoutes.route("/exam/questions/:examId").get(protect, getQuestionsByExamId);
 examRoutes.route("/cheatingLogs/:examId").get(protect, getCheatingLogsByExamId);
 examRoutes.route("/cheatingLogs/").post(protect, saveCheatingLog);
 examRoutes.route("/exam/:examId").post(protect, DeleteExamById);
+examRoutes.route("/cheatingLogs/:id").put(protect, updateCheatingLog);
 
 export default examRoutes;
