@@ -1,5 +1,5 @@
 {
-  "name": "ExamGuardian-Backend",
+  "name": "ExamGuardian",
   "version": "1.0.0",
   "description": "Backend for ExamGuardian Application",
   "main": "server.js",
