@@ -74,12 +74,6 @@ const LandingPage = () => {
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
 
-            {/* Floating Background Blobs */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -top-10 -right-10 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-pulse"></div>
-                <div className="absolute -bottom-16 -left-12 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-3xl opacity-25 animate-pulse animation-delay-2000"></div>
-                <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-4000"></div>
-            </div>
 
             {/* Navbar */}
             <Container maxWidth="lg" className="relative z-10">
@@ -111,7 +105,7 @@ const LandingPage = () => {
                                 <Button
                                     variant="contained"
                                     onClick={handleGetStarted}
-                                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:opacity-90 text-white font-semibold px-6 py-2 rounded-lg transition-all"
+                                    className="bg-gradient-to-r text-white font-semibold px-6 py-2 rounded-lg transition-all"
                                 >
                                     Get Started
                                 </Button>
@@ -130,7 +124,7 @@ const LandingPage = () => {
                     />
                     <Typography
                         variant="h2"
-                        className="font-extrabold mb-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent"
+                        className="font-extrabold mb-4 bg-gradient-to-r bg-clip-text "
                         sx={{ fontSize: { xs: '2rem', md: '3.5rem' }, lineHeight: 1.2 }}
                     >
                         Next-Generation Online Proctoring
