@@ -68,13 +68,13 @@ Before running ExamGuardian, ensure you have the following installed:
 cd backend
 npm install
 npm start
-
+```bash
 ### 2️⃣ Setup Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
-
+```bash
 
 4. **Access the application**
    - Open your browser and navigate to `http://localhost:5173`
