@@ -2,11 +2,6 @@
 
 **AI-powered Video Proctoring System for Secure Online Interviews & Exams**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![React](https://img.shields.io/badge/React-18.0+-61DAFB?logo=react&logoColor=white)](https://reactjs.org/)
-[![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/js)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-
 ---
 
 ## 📌 Overview
@@ -17,7 +12,7 @@ ExamGuardian is an intelligent **online proctoring system** that leverages **Com
 - **🎯 Focus Detection** – Alerts when candidates look away, face is missing, or multiple faces appear
 - **📱 Object Detection** – Identifies suspicious items (mobile phones, books, notes, extra devices)
 - **📝 Real-time Logging** – Event logging with precise timestamps
-- **📊 Automated Reporting** – Generates downloadable CSV/PDF proctoring reports
+- **📊 Automated Reporting** – Generates downloadable PDF proctoring reports
 
 ---
 
@@ -33,15 +28,6 @@ ExamGuardian is an intelligent **online proctoring system** that leverages **Com
 - **Focus Tracking** – Monitors candidate attention and engagement levels
 - **Anomaly Detection** – Flags unusual behavior patterns automatically
 
-### 📋 Comprehensive Reporting
-- **Event Logging** – Detailed timestamps for all suspicious activities
-- **Export Options** – Download reports in CSV/PDF formats
-- **Session Analytics** – Complete overview of exam/interview session integrity
-
-### 🎨 Modern UI/UX
-- **Responsive Design** – Built with React, Vite, and Tailwind CSS
-- **Material UI Components** – Professional and accessible interface
-- **Real-time Dashboard** – Live monitoring panel with instant alerts
 
 ---
 
@@ -54,13 +40,10 @@ ExamGuardian is an intelligent **online proctoring system** that leverages **Com
 - **[TensorFlow.js](https://www.tensorflow.org/js)** for object detection (COCO-SSD model)
 - **[Formik + Yup](https://formik.org/)** for form handling and validation
 
-### Backend (Optional)
+### Backend 
 - **[Node.js + Express](https://expressjs.com/)** for API and data management
 - **[MongoDB](https://www.mongodb.com/)** for candidate and activity data storage
 
-### AI/ML
-- **TensorFlow.js COCO-SSD** for real-time object detection
-- **Browser-based Computer Vision** for face and focus detection
 
 ---
 
@@ -77,27 +60,27 @@ Before running ExamGuardian, ensure you have the following installed:
 
 1. **Clone the repository**
 
-2. **Setup Backend**
-``cd backend
-npm install
-npm start ``
+# 🚀 Project Setup Guide
 
-
-3. **Setup Frontend**
-``cd frontend
+# 1️⃣ Setup Backend
+cd backend
 npm install
-npm run dev``
+npm start
+
+# 2️⃣ Setup Frontend
+cd frontend
+npm install
+npm run dev
 
 
 4. **Access the application**
    - Open your browser and navigate to `http://localhost:5173`
    - Allow webcam permissions when prompted
+   - Run backend on another port `http://localhost:3000`
 
 ### Environment Variables
 
-Create a `.env` file in the frontend directory:
-
-
+Create a `.env` file in the frontend and backend directory 
 ---
 
 ## 📖 Usage
@@ -149,7 +132,6 @@ After session completion:
    - Exports in multiple formats (PDF, CSV)
    - Includes visual charts and detailed analytics
 
-
 ---
 
 ## 🔮 Future Enhancements
@@ -169,7 +151,6 @@ After session completion:
 - **Q4 2025**: Advanced analytics and machine learning insights
 
 ---
-
 
 </div>
 
