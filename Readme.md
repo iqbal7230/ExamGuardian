@@ -62,12 +62,12 @@ Before running ExamGuardian, ensure you have the following installed:
 
 # 🚀 Project Setup Guide
 
-# 1️⃣ Setup Backend
+### 1️⃣ Setup Backend
 cd backend
 npm install
 npm start
 
-# 2️⃣ Setup Frontend
+### 2️⃣ Setup Frontend
 cd frontend
 npm install
 npm run dev
